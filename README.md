@@ -134,7 +134,7 @@ PROVISION_KIT_BRANCH="main"
 ALLOW_PING=0
 ```
 
-On first run, if `ADMIN_SUDO_PASSWORD` is empty, `provision-kit` will prompt you to set it and write it to `/etc/provision-kit/provision.conf` before allowing menu actions. Format: minimum 10 characters using letters, numbers, and `@#%+=:.,_-`.
+On first run, if `ADMIN_SUDO_PASSWORD` is empty, `provision-kit` will prompt you to set it and write it to `/etc/provision-kit/provision.conf` before allowing menu actions. Format: minimum 6 characters.
 
 ## Usage
 

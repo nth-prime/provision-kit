@@ -24,9 +24,9 @@ run_sector() {
 prompt_and_set_admin_password() {
   local pw1 pw2
   while true; do
-    read -rsp "Set ADMIN_SUDO_PASSWORD (min 10 chars; letters, numbers, and @#%+=:.,_- only): " pw1
+    read -rsp "Set ADMIN_SUDO_PASSWORD (min 6 chars): " pw1
     echo
-    if [[ ${#pw1} -lt 10 || ! "$pw1" =~ ^[A-Za-z0-9@#%+=:.,_-]+$ ]]; then
+    if [[ ${#pw1} -lt 6 ]]; then
       echo "Invalid password format."
       continue
     fi
