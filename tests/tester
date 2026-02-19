@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+UNIT_DIR="$ROOT_DIR/tests/unit"
+
+run_shell_syntax_checks() {
+  if command -v bash >/dev/null 2>&1; then
+    echo "Running bash syntax checks..."
+    bash -n "$ROOT_DIR/install.sh"
+    bash -n "$ROOT_DIR/provision"
+    bash -n "$ROOT_DIR/lib/lib.sh"
+    bash -n "$ROOT_DIR/sectors/"*.sh
+    bash -n "$ROOT_DIR/tests/lib/assert.sh"
+    bash -n "$UNIT_DIR/"*.sh
+    echo "PASS: Shell syntax checks"
+  else
+    echo "WARN: bash not found, skipping syntax checks"
+  fi
+}
+
+run_shellcheck_if_available() {
+  if command -v shellcheck >/dev/null 2>&1; then
+    echo "Running shellcheck..."
+    shellcheck "$ROOT_DIR/install.sh" \
+      "$ROOT_DIR/provision" \
+      "$ROOT_DIR/lib/lib.sh" \
+      "$ROOT_DIR/sectors/"*.sh \
+      "$ROOT_DIR/tests/lib/assert.sh" \
+      "$UNIT_DIR/"*.sh
+    echo "PASS: shellcheck"
+  else
+    echo "WARN: shellcheck not found, skipping lint"
+  fi
+}
+
+run_unit_tests() {
+  echo "Running unit tests..."
+  local failed=0
+  local test_file
+  for test_file in "$UNIT_DIR/"*.sh; do
+    echo "-> $(basename "$test_file")"
+    if ! bash "$test_file"; then
+      failed=1
+    fi
+  done
+  if (( failed != 0 )); then
+    echo "One or more tests failed."
+    exit 1
+  fi
+  echo "PASS: All unit tests"
+}
+
+run_shell_syntax_checks
+run_shellcheck_if_available
+run_unit_tests
+
+echo "All checks completed."
+

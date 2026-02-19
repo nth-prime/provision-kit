@@ -1,0 +1,17 @@
+# SECURITY POLICY CONFIGURATION
+
+SSH_PORT=22
+
+# Always allow SSH over tailscale interface
+ENFORCE_TAILSCALE_ACCESS=1
+
+# Also allow SSH from public whitelist
+SSH_ALLOW_PUBLIC_WHITELIST=1
+
+SSH_WHITELIST_IPV4="203.0.113.10/32"
+SSH_WHITELIST_IPV6=""
+
+DEFAULT_USER_NAME="ubuntu"
+
+# Set to 1 only if you explicitly want to clear all existing UFW rules first.
+UFW_FORCE_RESET=0

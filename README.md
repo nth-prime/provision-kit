@@ -1,0 +1,216 @@
+# Provision Kit
+
+Agnostic secure server bootstrap framework with modular sectors, idempotent scripts, and opinionated SSH hardening.
+
+## Security Defaults
+
+- SSH key-only authentication (`PasswordAuthentication no`)
+- Root SSH login disabled (`PermitRootLogin no`)
+- SSH allowed on `tailscale0`
+- Optional SSH public IP whitelist
+- Firewall default deny inbound (`ufw`)
+- No global `NOPASSWD` sudo policy
+- Warns if default cloud user exists (example: `ubuntu`)
+
+## Repository Layout
+
+```text
+provision-kit/
+  provision                     # selector menu
+  install.sh                    # installer
+  lib/lib.sh                    # shared utilities
+  sectors/
+    00-tailscale.sh
+    10-user-ssh.sh
+    11-ssh-key-rotate.sh
+    15-ssh-access.sh
+    20-baseline-os.sh
+    90-verify.sh
+  config/
+    provision.conf.example
+```
+
+Install target paths:
+
+- `/opt/provision-kit/`
+- `/etc/provision-kit/provision.conf`
+- `/usr/local/bin/provision-kit` (symlink)
+
+## Requirements
+
+- Debian/Ubuntu-style host
+- Root or `sudo` privileges
+- `systemd`
+- Internet access for package installs and Tailscale bootstrap
+
+## Install
+
+### Option 1: Clone and install
+
+```bash
+git clone https://github.com/<your-org-or-user>/provision-kit.git
+cd provision-kit
+sudo bash install.sh
+```
+
+### Option 2: One-liner from GitHub
+
+```bash
+set -euo pipefail
+tmpdir="$(mktemp -d)"
+curl -fsSL "https://github.com/<your-org-or-user>/provision-kit/archive/refs/heads/main.tar.gz" -o "$tmpdir/provision-kit.tar.gz"
+tar -xzf "$tmpdir/provision-kit.tar.gz" -C "$tmpdir"
+cd "$tmpdir/provision-kit-main"
+sudo bash install.sh
+```
+
+After install:
+
+```bash
+provision-kit
+```
+
+## Configuration
+
+Config file path:
+
+```text
+/etc/provision-kit/provision.conf
+```
+
+Initial config is copied from `config/provision.conf.example` on first install.
+
+Key settings:
+
+- `SSH_PORT` (default `22`)
+- `ENFORCE_TAILSCALE_ACCESS` (must be `1`)
+- `SSH_ALLOW_PUBLIC_WHITELIST` (`1` or `0`)
+- `SSH_WHITELIST_IPV4` (space-separated CIDRs)
+- `SSH_WHITELIST_IPV6` (space-separated CIDRs)
+- `DEFAULT_USER_NAME` (for warning checks)
+- `UFW_FORCE_RESET` (`1` to clear all existing UFW rules before applying kit rules, default `0`)
+
+Example:
+
+```bash
+SSH_PORT=22
+ENFORCE_TAILSCALE_ACCESS=1
+SSH_ALLOW_PUBLIC_WHITELIST=1
+SSH_WHITELIST_IPV4="203.0.113.10/32 198.51.100.42/32"
+SSH_WHITELIST_IPV6="2001:db8::1/128"
+DEFAULT_USER_NAME="ubuntu"
+UFW_FORCE_RESET=0
+```
+
+## Usage
+
+Run selector:
+
+```bash
+provision-kit
+```
+
+Menu options:
+
+1. Tailscale Bootstrap
+2. Admin User + SSH Setup
+3. SSH Access Policy
+4. Baseline OS
+5. Verify Posture
+6. Edit Config
+7. Run Recommended Sequence
+8. Show Status
+9. Backup SSH/UFW/Provision Config
+10. Reset Completion Markers
+11. Print Effective Config
+12. Rotate User SSH Key
+
+Recommended sector order:
+
+1. `00-tailscale.sh` - installs/connects Tailscale
+2. `10-user-ssh.sh` - creates admin user, installs SSH public key
+3. `15-ssh-access.sh` - applies SSH + firewall access policy
+4. `20-baseline-os.sh` - updates system baseline packages/services
+5. `90-verify.sh` - prints effective posture checks
+
+All sectors are intended to be re-runnable. Completion markers are written under:
+
+```text
+/var/lib/provision-kit/
+```
+
+## What Each Sector Does
+
+- `00-tailscale.sh`
+  - Installs Tailscale if absent
+  - Prompts for auth key if not already connected
+- `10-user-ssh.sh`
+  - Creates admin user if missing
+  - Adds user to `sudo` group
+  - Adds provided public key idempotently to `authorized_keys`
+  - Warns if default cloud user exists
+- `15-ssh-access.sh`
+  - Writes `/etc/ssh/sshd_config.d/95-provision.conf`
+  - Sets SSH daemon `Port` from `SSH_PORT`
+  - Disables root/password SSH auth and limits forwarding/session knobs
+  - Applies `ufw` deny-by-default inbound policy
+  - Optionally resets UFW state only when `UFW_FORCE_RESET=1`
+  - Allows SSH on `tailscale0`, plus optional whitelist
+- `11-ssh-key-rotate.sh`
+  - Backs up current `authorized_keys` before changes
+  - Supports replacing all keys, removing one key, and adding a replacement key
+  - Validates key format and enforces secure file ownership/permissions
+- `20-baseline-os.sh`
+  - Updates/upgrades packages
+  - Enables unattended upgrades
+  - Enables time sync service
+- `90-verify.sh`
+  - Prints Tailscale status, listening ports, effective SSHD config, UFW status, unattended-upgrades status
+
+## Security Invariants
+
+This kit should not be modified to:
+
+- Re-enable SSH password authentication
+- Re-enable root SSH login
+- Add global `%sudo NOPASSWD:ALL`
+- Generate private keys on the server
+- Allow SSH on all interfaces without Tailscale restriction or explicit whitelist
+
+## Troubleshooting
+
+- `Missing config: /etc/provision-kit/provision.conf`
+  - Re-run `sudo bash install.sh` or create the file from the example.
+- `Refusing to continue: ENFORCE_TAILSCALE_ACCESS must be 1`
+  - Set `ENFORCE_TAILSCALE_ACCESS=1` in config.
+- `sshd -t` fails
+  - Validate existing SSH config includes and syntax before rerunning sector 15.
+- SSH lockout risk
+  - Ensure Tailscale is connected and your key is installed before applying sector 15.
+
+## Testing
+
+This repository includes a lightweight test harness under `tests/`:
+
+- `tests/tester` - runs syntax checks, optional `shellcheck`, and unit tests
+- `tests/unit/test_security_invariants.sh` - validates core security invariants
+- `tests/unit/test_selector_menu.sh` - validates selector menu coverage and wiring
+- `tests/unit/test_config_defaults.sh` - validates expected default config values
+
+Run tests on a Linux host:
+
+```bash
+chmod +x tests/tester tests/unit/*.sh tests/lib/assert.sh
+./tests/tester
+```
+
+Optional dependency:
+
+- `shellcheck` (if present, linting is included automatically)
+
+## Publishing Checklist
+
+- Replace placeholder GitHub URLs in this README
+- Add a `LICENSE`
+- Add CI shell linting (recommended: `shellcheck` + `bash -n`)
+- Test end-to-end on a disposable VM before tagging a release

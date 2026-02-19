@@ -1,0 +1,196 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BASE_DIR="/opt/provision-kit"
+SECTOR_DIR="$BASE_DIR/sectors"
+CONFIG_FILE="/etc/provision-kit/provision.conf"
+MARKER_DIR="/var/lib/provision-kit"
+BACKUP_DIR="/var/backups/provision-kit"
+
+run_sector() {
+  local script="$1"
+  if [[ ! -x "$script" ]]; then
+    echo "Missing or non-executable sector: $script"
+    return 1
+  fi
+
+  if [[ $(id -u) -ne 0 ]]; then
+    sudo "$script"
+  else
+    "$script"
+  fi
+}
+
+run_recommended_sequence() {
+  run_sector "$SECTOR_DIR/00-tailscale.sh"
+  run_sector "$SECTOR_DIR/10-user-ssh.sh"
+  run_sector "$SECTOR_DIR/15-ssh-access.sh"
+  run_sector "$SECTOR_DIR/20-baseline-os.sh"
+  run_sector "$SECTOR_DIR/90-verify.sh"
+}
+
+show_status() {
+  echo "Completion markers:"
+  if [[ $(id -u) -ne 0 ]]; then
+    sudo ls -1 "$MARKER_DIR" 2>/dev/null || echo "(none)"
+  else
+    ls -1 "$MARKER_DIR" 2>/dev/null || echo "(none)"
+  fi
+
+  echo
+  echo "Quick checks:"
+  if command -v tailscale >/dev/null 2>&1; then
+    tailscale ip -4 2>/dev/null || true
+  else
+    echo "tailscale: not installed"
+  fi
+
+  if command -v ufw >/dev/null 2>&1; then
+    if [[ $(id -u) -ne 0 ]]; then
+      sudo ufw status 2>/dev/null | head -n 1 || true
+    else
+      ufw status 2>/dev/null | head -n 1 || true
+    fi
+  else
+    echo "ufw: not installed"
+  fi
+}
+
+backup_runtime_config() {
+  local ts
+  ts="$(date -u +%Y%m%dT%H%M%SZ)"
+  local target="$BACKUP_DIR/$ts"
+
+  if [[ $(id -u) -ne 0 ]]; then
+    sudo mkdir -p "$target"
+    [[ -f /etc/provision-kit/provision.conf ]] && sudo cp -a /etc/provision-kit/provision.conf "$target/"
+    [[ -f /etc/ssh/sshd_config ]] && sudo cp -a /etc/ssh/sshd_config "$target/"
+    [[ -d /etc/ssh/sshd_config.d ]] && sudo cp -a /etc/ssh/sshd_config.d "$target/"
+    [[ -f /etc/ufw/user.rules ]] && sudo cp -a /etc/ufw/user.rules "$target/"
+    [[ -f /etc/ufw/user6.rules ]] && sudo cp -a /etc/ufw/user6.rules "$target/"
+    [[ -f /etc/ufw/before.rules ]] && sudo cp -a /etc/ufw/before.rules "$target/"
+    [[ -f /etc/ufw/before6.rules ]] && sudo cp -a /etc/ufw/before6.rules "$target/"
+  else
+    mkdir -p "$target"
+    [[ -f /etc/provision-kit/provision.conf ]] && cp -a /etc/provision-kit/provision.conf "$target/"
+    [[ -f /etc/ssh/sshd_config ]] && cp -a /etc/ssh/sshd_config "$target/"
+    [[ -d /etc/ssh/sshd_config.d ]] && cp -a /etc/ssh/sshd_config.d "$target/"
+    [[ -f /etc/ufw/user.rules ]] && cp -a /etc/ufw/user.rules "$target/"
+    [[ -f /etc/ufw/user6.rules ]] && cp -a /etc/ufw/user6.rules "$target/"
+    [[ -f /etc/ufw/before.rules ]] && cp -a /etc/ufw/before.rules "$target/"
+    [[ -f /etc/ufw/before6.rules ]] && cp -a /etc/ufw/before6.rules "$target/"
+  fi
+
+  echo "Backup created at: $target"
+}
+
+reset_markers() {
+  read -rp "Delete all completion markers in $MARKER_DIR? (y/n): " yn
+  [[ "$yn" =~ ^[yY]$ ]] || return 0
+
+  if [[ $(id -u) -ne 0 ]]; then
+    sudo rm -f "$MARKER_DIR"/*.done
+  else
+    rm -f "$MARKER_DIR"/*.done
+  fi
+  echo "Markers reset."
+}
+
+print_effective_config() {
+  if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "Config not found: $CONFIG_FILE"
+    return 1
+  fi
+
+  if [[ $(id -u) -ne 0 ]]; then
+    sudo awk 'NF && $1 !~ /^#/' "$CONFIG_FILE"
+  else
+    awk 'NF && $1 !~ /^#/' "$CONFIG_FILE"
+  fi
+}
+
+pick_editor() {
+  if [[ -n "${EDITOR:-}" ]]; then
+    echo "$EDITOR"
+    return 0
+  fi
+  if command -v nano >/dev/null 2>&1; then
+    echo "nano"
+    return 0
+  fi
+  if command -v vi >/dev/null 2>&1; then
+    echo "vi"
+    return 0
+  fi
+  return 1
+}
+
+edit_config() {
+  if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "Config not found: $CONFIG_FILE"
+    return 1
+  fi
+
+  if [[ $(id -u) -ne 0 ]]; then
+    if command -v sudoedit >/dev/null 2>&1; then
+      sudoedit "$CONFIG_FILE"
+      return $?
+    fi
+    local editor
+    if ! editor="$(pick_editor)"; then
+      echo "No editor found. Set EDITOR or install nano/vi."
+      return 1
+    fi
+    sudo "$editor" "$CONFIG_FILE"
+    return $?
+  fi
+
+  local editor
+  if ! editor="$(pick_editor)"; then
+    echo "No editor found. Set EDITOR or install nano/vi."
+    return 1
+  fi
+  "$editor" "$CONFIG_FILE"
+}
+
+while true; do
+  clear || true
+  echo "===================================="
+  echo " Provision Kit"
+  echo "===================================="
+  echo "1) Tailscale Bootstrap"
+  echo "2) Admin User + SSH Setup"
+  echo "3) SSH Access Policy"
+  echo "4) Baseline OS"
+  echo "5) Verify Posture"
+  echo "6) Edit Config"
+  echo "7) Run Recommended Sequence"
+  echo "8) Show Status"
+  echo "9) Backup SSH/UFW/Provision Config"
+  echo "10) Reset Completion Markers"
+  echo "11) Print Effective Config"
+  echo "12) Rotate User SSH Key"
+  echo "q) Quit"
+  echo "------------------------------------"
+  read -rp "Select: " opt
+
+  case "$opt" in
+    1) run_sector "$SECTOR_DIR/00-tailscale.sh" ;;
+    2) run_sector "$SECTOR_DIR/10-user-ssh.sh" ;;
+    3) run_sector "$SECTOR_DIR/15-ssh-access.sh" ;;
+    4) run_sector "$SECTOR_DIR/20-baseline-os.sh" ;;
+    5) run_sector "$SECTOR_DIR/90-verify.sh" ;;
+    6) edit_config ;;
+    7) run_recommended_sequence ;;
+    8) show_status ;;
+    9) backup_runtime_config ;;
+    10) reset_markers ;;
+    11) print_effective_config ;;
+    12) run_sector "$SECTOR_DIR/11-ssh-key-rotate.sh" ;;
+    q|Q) exit 0 ;;
+    *) echo "Invalid selection." ;;
+  esac
+
+  read -rp "Run another sector? (y/n): " again
+  [[ "$again" =~ ^[yY]$ ]] || exit 0
+done
