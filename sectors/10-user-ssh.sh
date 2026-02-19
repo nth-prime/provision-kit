@@ -5,6 +5,19 @@ require_root
 require_config
 source "$CONFIG"
 
+print_pubkey_help() {
+  echo
+  echo "Public SSH key help:"
+  echo "  Linux/macOS:"
+  echo "    ssh-keygen -t ed25519 -C \"your-label\""
+  echo "    cat ~/.ssh/id_ed25519.pub"
+  echo "  Windows PowerShell:"
+  echo "    ssh-keygen -t ed25519 -C \"your-label\""
+  echo "    Get-Content \$env:USERPROFILE\\.ssh\\id_ed25519.pub"
+  echo "Paste the full line that starts with: ssh-ed25519 (or ssh-rsa/ssh-ecdsa)."
+  echo
+}
+
 read -rp "Admin username: " USER
 if [[ -z "$USER" ]]; then
   echo "Username cannot be empty."
@@ -23,6 +36,7 @@ fi
 echo "$USER:$ADMIN_SUDO_PASSWORD" | chpasswd
 echo "Set local sudo password for $USER from config policy."
 
+print_pubkey_help
 read -rp "Paste public SSH key: " PUBKEY
 if [[ ! "$PUBKEY" =~ ^ssh-(rsa|ed25519|ecdsa) ]]; then
   echo "Key format does not look like an OpenSSH public key."

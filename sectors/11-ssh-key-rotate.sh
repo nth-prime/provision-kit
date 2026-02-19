@@ -3,6 +3,19 @@ set -euo pipefail
 source /opt/provision-kit/lib/lib.sh
 require_root
 
+print_pubkey_help() {
+  echo
+  echo "Public SSH key help:"
+  echo "  Linux/macOS:"
+  echo "    ssh-keygen -t ed25519 -C \"your-label\""
+  echo "    cat ~/.ssh/id_ed25519.pub"
+  echo "  Windows PowerShell:"
+  echo "    ssh-keygen -t ed25519 -C \"your-label\""
+  echo "    Get-Content \$env:USERPROFILE\\.ssh\\id_ed25519.pub"
+  echo "Paste the full line that starts with: ssh-ed25519 (or ssh-rsa/ssh-ecdsa)."
+  echo
+}
+
 is_valid_pubkey() {
   local key="$1"
   [[ "$key" =~ ^ssh-(rsa|ed25519|ecdsa) ]] || return 1
@@ -62,6 +75,7 @@ read -rp "Choice: " choice
 
 case "$choice" in
   1)
+    print_pubkey_help
     read -rp "Paste new public SSH key: " NEWKEY
     if ! is_valid_pubkey "$NEWKEY"; then
       echo "Invalid public key format."
@@ -96,6 +110,7 @@ case "$choice" in
 
     read -rp "Add replacement key now? (y/n): " ADDNEW
     if [[ "$ADDNEW" =~ ^[yY]$ ]]; then
+      print_pubkey_help
       read -rp "Paste replacement public SSH key: " NEWKEY
       if ! is_valid_pubkey "$NEWKEY"; then
         echo "Invalid public key format."
@@ -110,6 +125,7 @@ case "$choice" in
     fi
     ;;
   3)
+    print_pubkey_help
     read -rp "Paste new public SSH key: " NEWKEY
     if ! is_valid_pubkey "$NEWKEY"; then
       echo "Invalid public key format."

@@ -74,6 +74,26 @@ After install:
 provision-kit
 ```
 
+## SSH Key Quickstart
+
+Generate your key on your local machine (not on the server), then paste the public key line when prompted.
+
+Linux/macOS:
+
+```bash
+ssh-keygen -t ed25519 -C "your-label"
+cat ~/.ssh/id_ed25519.pub
+```
+
+Windows PowerShell:
+
+```powershell
+ssh-keygen -t ed25519 -C "your-label"
+Get-Content $env:USERPROFILE\.ssh\id_ed25519.pub
+```
+
+Use the full line that begins with `ssh-ed25519` (or `ssh-rsa`/`ssh-ecdsa`).
+
 ## Configuration
 
 Config file path:
