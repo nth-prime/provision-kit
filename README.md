@@ -146,13 +146,13 @@ provision-kit
 
 Menu options:
 
-1. Tailscale Bootstrap
-2. Admin User + SSH Setup
-3. SSH Access Policy
-4. Baseline OS
-5. Verify Posture
-6. Edit Config
-7. Run Recommended Sequence
+1. Edit Config
+2. Run Recommended Sequence (optional)
+3. Tailscale Bootstrap
+4. Admin User + SSH Setup
+5. SSH Access Policy
+6. Baseline OS
+7. Verify Posture
 8. Show Status
 9. Backup SSH/UFW/Provision Config
 10. Reset Completion Markers

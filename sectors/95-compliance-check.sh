@@ -31,7 +31,12 @@ check_required_var "SSH_PORT"
 check_required_var "ENFORCE_TAILSCALE_ACCESS"
 check_required_var "SSH_ALLOW_PUBLIC_WHITELIST"
 check_required_var "SSH_WHITELIST_IPV4"
-check_required_var "SSH_WHITELIST_IPV6"
+
+if [[ -v SSH_WHITELIST_IPV6 ]]; then
+  pass "Config variable present: SSH_WHITELIST_IPV6"
+else
+  fail "Missing required config variable: SSH_WHITELIST_IPV6"
+fi
 
 if [[ "${ENFORCE_TAILSCALE_ACCESS:-0}" == "1" ]]; then
   pass "ENFORCE_TAILSCALE_ACCESS is enabled"
@@ -45,19 +50,26 @@ else
   pass "SSH_PORT is valid"
 fi
 
-if sshd -T | grep -Eq '^permitrootlogin no$'; then
+mkdir -p /run/sshd
+if sshd -T >/dev/null 2>&1; then
+  pass "sshd -T executed successfully"
+else
+  fail "sshd -T failed"
+fi
+
+if sshd -T 2>/dev/null | grep -Eq '^permitrootlogin no$'; then
   pass "Root SSH login disabled"
 else
   fail "Root SSH login is not disabled"
 fi
 
-if sshd -T | grep -Eq '^passwordauthentication no$'; then
+if sshd -T 2>/dev/null | grep -Eq '^passwordauthentication no$'; then
   pass "SSH password authentication disabled"
 else
   fail "SSH password authentication is not disabled"
 fi
 
-if sshd -T | grep -Eq "^port ${SSH_PORT}$"; then
+if sshd -T 2>/dev/null | grep -Eq "^port ${SSH_PORT}$"; then
   pass "SSHD port matches SSH_PORT"
 else
   fail "SSHD port does not match SSH_PORT"
@@ -69,7 +81,7 @@ else
   fail "UFW default incoming policy is not deny"
 fi
 
-if ufw status | grep -Eq '^\s*'"${SSH_PORT}"'/tcp\s+ALLOW IN\s+Anywhere on tailscale0'; then
+if ufw status | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp([[:space:]]+\(v6\))?[[:space:]]+ALLOW IN[[:space:]]+Anywhere( \(v6\))? on tailscale0" >/dev/null; then
   pass "UFW allows SSH on tailscale0"
 else
   fail "UFW rule for SSH on tailscale0 missing"
@@ -78,7 +90,7 @@ fi
 if [[ "${SSH_ALLOW_PUBLIC_WHITELIST:-0}" == "1" ]]; then
   missing_whitelist=0
   for cidr in ${SSH_WHITELIST_IPV4:-}; do
-    if ufw status | grep -Fq "${SSH_PORT}/tcp                   ALLOW IN    ${cidr}"; then
+    if ufw status | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp[[:space:]]+ALLOW IN[[:space:]]+${cidr}$" >/dev/null; then
       pass "Whitelist IPv4 rule present: $cidr"
     else
       fail "Whitelist IPv4 rule missing: $cidr"
@@ -86,7 +98,7 @@ if [[ "${SSH_ALLOW_PUBLIC_WHITELIST:-0}" == "1" ]]; then
     fi
   done
   for cidr in ${SSH_WHITELIST_IPV6:-}; do
-    if ufw status | grep -Fq "${SSH_PORT}/tcp                   ALLOW IN    ${cidr}"; then
+    if ufw status | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp[[:space:]]+ALLOW IN[[:space:]]+${cidr}$" >/dev/null; then
       pass "Whitelist IPv6 rule present: $cidr"
     else
       fail "Whitelist IPv6 rule missing: $cidr"

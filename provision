@@ -242,13 +242,13 @@ while true; do
   echo "===================================="
   echo " Provision Kit"
   echo "===================================="
-  echo "1) Tailscale Bootstrap"
-  echo "2) Admin User + SSH Setup"
-  echo "3) SSH Access Policy"
-  echo "4) Baseline OS"
-  echo "5) Verify Posture"
-  echo "6) Edit Config"
-  echo "7) Run Recommended Sequence"
+  echo "1) Edit Config"
+  echo "2) Run Recommended Sequence (optional)"
+  echo "3) Tailscale Bootstrap"
+  echo "4) Admin User + SSH Setup"
+  echo "5) SSH Access Policy"
+  echo "6) Baseline OS"
+  echo "7) Verify Posture"
   echo "8) Show Status"
   echo "9) Backup SSH/UFW/Provision Config"
   echo "10) Reset Completion Markers"
@@ -265,13 +265,13 @@ while true; do
   read -rp "Select: " opt
 
   case "$opt" in
-    1) run_sector "$SECTOR_DIR/00-tailscale.sh" ;;
-    2) run_sector "$SECTOR_DIR/10-user-ssh.sh" ;;
-    3) run_sector "$SECTOR_DIR/15-ssh-access.sh" ;;
-    4) run_sector "$SECTOR_DIR/20-baseline-os.sh" ;;
-    5) run_sector "$SECTOR_DIR/90-verify.sh" ;;
-    6) edit_config ;;
-    7) run_recommended_sequence ;;
+    1) edit_config ;;
+    2) run_recommended_sequence ;;
+    3) run_sector "$SECTOR_DIR/00-tailscale.sh" ;;
+    4) run_sector "$SECTOR_DIR/10-user-ssh.sh" ;;
+    5) run_sector "$SECTOR_DIR/15-ssh-access.sh" ;;
+    6) run_sector "$SECTOR_DIR/20-baseline-os.sh" ;;
+    7) run_sector "$SECTOR_DIR/90-verify.sh" ;;
     8) show_status ;;
     9) backup_runtime_config ;;
     10) reset_markers ;;
