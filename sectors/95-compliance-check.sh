@@ -16,6 +16,18 @@ fail() {
   fail_count=$((fail_count + 1))
 }
 
+debug() {
+  echo "DEBUG: $1"
+}
+
+normalize_host_cidr() {
+  local cidr="$1"
+  case "$cidr" in
+    */32|*/128) echo "${cidr%/*}" ;;
+    *) echo "$cidr" ;;
+  esac
+}
+
 check_required_var() {
   local name="$1"
   if [[ -z "${!name:-}" ]]; then
@@ -57,31 +69,42 @@ else
   fail "sshd -T failed"
 fi
 
-if sshd -T 2>/dev/null | grep -Eq '^permitrootlogin no$'; then
+SSHD_EFFECTIVE="$(sshd -T 2>/dev/null || true)"
+UFW_STATUS="$(ufw status 2>/dev/null || true)"
+UFW_VERBOSE="$(ufw status verbose 2>/dev/null || true)"
+
+debug "sshd permitrootlogin: $(echo "$SSHD_EFFECTIVE" | awk '/^permitrootlogin /{print $2}')"
+debug "sshd passwordauthentication: $(echo "$SSHD_EFFECTIVE" | awk '/^passwordauthentication /{print $2}')"
+debug "sshd port: $(echo "$SSHD_EFFECTIVE" | awk '/^port /{print $2}' | head -n1)"
+
+if echo "$SSHD_EFFECTIVE" | grep -Eq '^permitrootlogin no$'; then
   pass "Root SSH login disabled"
 else
   fail "Root SSH login is not disabled"
 fi
 
-if sshd -T 2>/dev/null | grep -Eq '^passwordauthentication no$'; then
+if echo "$SSHD_EFFECTIVE" | grep -Eq '^passwordauthentication no$'; then
   pass "SSH password authentication disabled"
 else
   fail "SSH password authentication is not disabled"
 fi
 
-if sshd -T 2>/dev/null | grep -Eq "^port ${SSH_PORT}$"; then
+if echo "$SSHD_EFFECTIVE" | grep -Eq "^port ${SSH_PORT}$"; then
   pass "SSHD port matches SSH_PORT"
 else
   fail "SSHD port does not match SSH_PORT"
 fi
 
-if ufw status verbose | grep -Eq '^Default: deny \(incoming\)'; then
+if echo "$UFW_VERBOSE" | grep -Eq '^Default: deny \(incoming\)'; then
   pass "UFW default deny incoming"
 else
   fail "UFW default incoming policy is not deny"
 fi
 
-if ufw status | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp([[:space:]]+\(v6\))?[[:space:]]+ALLOW IN[[:space:]]+Anywhere( \(v6\))? on tailscale0" >/dev/null; then
+debug "ufw tailscale candidates:"
+echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp.*tailscale0" || true
+
+if echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp([[:space:]]+\(v6\))?[[:space:]]+on[[:space:]]+tailscale0[[:space:]]+ALLOW IN[[:space:]]+Anywhere( \(v6\))?$" >/dev/null; then
   pass "UFW allows SSH on tailscale0"
 else
   fail "UFW rule for SSH on tailscale0 missing"
@@ -90,7 +113,9 @@ fi
 if [[ "${SSH_ALLOW_PUBLIC_WHITELIST:-0}" == "1" ]]; then
   missing_whitelist=0
   for cidr in ${SSH_WHITELIST_IPV4:-}; do
-    if ufw status | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp[[:space:]]+ALLOW IN[[:space:]]+${cidr}$" >/dev/null; then
+    host="$(normalize_host_cidr "$cidr")"
+    debug "checking IPv4 whitelist rule for: $cidr (host form: $host)"
+    if echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp[[:space:]]+ALLOW IN[[:space:]]+(${cidr}|${host})$" >/dev/null; then
       pass "Whitelist IPv4 rule present: $cidr"
     else
       fail "Whitelist IPv4 rule missing: $cidr"
@@ -98,7 +123,9 @@ if [[ "${SSH_ALLOW_PUBLIC_WHITELIST:-0}" == "1" ]]; then
     fi
   done
   for cidr in ${SSH_WHITELIST_IPV6:-}; do
-    if ufw status | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp[[:space:]]+ALLOW IN[[:space:]]+${cidr}$" >/dev/null; then
+    host="$(normalize_host_cidr "$cidr")"
+    debug "checking IPv6 whitelist rule for: $cidr (host form: $host)"
+    if echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp[[:space:]]+ALLOW IN[[:space:]]+(${cidr}|${host})$" >/dev/null; then
       pass "Whitelist IPv6 rule present: $cidr"
     else
       fail "Whitelist IPv6 rule missing: $cidr"
