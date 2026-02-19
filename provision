@@ -297,6 +297,6 @@ while true; do
     *) echo "Invalid selection." ;;
   esac
 
-  read -rp "Run another sector? (y/n): " again
-  [[ "$again" =~ ^[yY]$ ]] || exit 0
+  read -rp "Run another selector? (Y/n): " again
+  [[ -z "$again" || "$again" =~ ^[yY]$ ]] || exit 0
 done

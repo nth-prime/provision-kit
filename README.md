@@ -229,8 +229,9 @@ All sectors are intended to be re-runnable. Completion markers are written under
 - `90-verify.sh`
   - Prints Tailscale status, listening ports, effective SSHD config, UFW status, unattended-upgrades status
 - `95-compliance-check.sh`
-  - Enforces pass/fail hardening checks against config and live system state
-  - Exits non-zero on compliance failures
+  - Opens a compliance selector (standard, verbose walk-through, raw-state view)
+  - Uses modular checks under `sectors/compliance/checks.sh`
+  - Enforces pass/fail hardening checks and exits non-zero on failures
 
 ## Security Invariants
 
@@ -274,6 +275,10 @@ Run tests on a Linux host:
 chmod +x tests/tester tests/unit/*.sh tests/lib/assert.sh
 ./tests/tester
 ```
+
+Selector behavior:
+
+- After each action, `Run another selector? (Y/n)` defaults to **Yes** when you press Enter.
 
 Optional dependency:
 

@@ -41,6 +41,7 @@ assert_contains "$SELECTOR" '15\) run_sector "\$SECTOR_DIR/95-compliance-check.s
 assert_contains "$SELECTOR" '16\) restart_now ;;' "Menu option 16 must be wired"
 assert_contains "$SELECTOR" '17\) run_sector "\$SECTOR_DIR/05-update-kit.sh" ;;' "Menu option 17 must be wired"
 assert_contains "$SELECTOR" '18\) run_sector "\$SECTOR_DIR/30-ping-policy.sh" ;;' "Menu option 18 must be wired"
+assert_contains "$SELECTOR" 'Run another selector\? \(Y/n\): ' "Selector should default follow-up prompt to yes"
 
 pass "Selector menu options"
 
