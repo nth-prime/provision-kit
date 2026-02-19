@@ -48,7 +48,7 @@ Install target paths:
 ### Option 1: Clone and install
 
 ```bash
-git clone https://github.com/<your-org-or-user>/provision-kit.git
+git clone https://github.com/nth-prime/provision-kit.git
 cd provision-kit
 sudo bash install.sh
 ```
@@ -58,7 +58,7 @@ sudo bash install.sh
 ```bash
 set -euo pipefail
 tmpdir="$(mktemp -d)"
-curl -fsSL "https://github.com/<your-org-or-user>/provision-kit/archive/refs/heads/main.tar.gz" -o "$tmpdir/provision-kit.tar.gz"
+curl -fsSL "https://github.com/nth-prime/provision-kit/archive/refs/heads/main.tar.gz" -o "$tmpdir/provision-kit.tar.gz"
 tar -xzf "$tmpdir/provision-kit.tar.gz" -C "$tmpdir"
 cd "$tmpdir/provision-kit-main"
 sudo bash install.sh
