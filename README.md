@@ -19,12 +19,17 @@ provision-kit/
   provision                     # selector menu
   install.sh                    # installer
   lib/lib.sh                    # shared utilities
+  compliance/
+    lib/                        # compliance engine and checks
+    repairs/                    # remediation scripts used by compliance checks
+    tests/                      # compliance-specific mapping tests
   sectors/
     00-tailscale.sh
     05-update-kit.sh
     10-user-ssh.sh
     11-ssh-key-rotate.sh
     15-ssh-access.sh
+    16-ssh-auth-repair.sh
     20-baseline-os.sh
     25-hostname.sh
     30-ping-policy.sh
@@ -176,6 +181,7 @@ Menu options:
 16. Restart Machine Now
 17. Update Provision Kit from GitHub
 18. Toggle Ping Policy
+19. Repair SSH Auth Override
 
 Recommended sector order:
 
@@ -217,6 +223,9 @@ All sectors are intended to be re-runnable. Completion markers are written under
   - Backs up current `authorized_keys` before changes
   - Supports replacing all keys, removing one key, and adding a replacement key
   - Validates key format and enforces secure file ownership/permissions
+- `16-ssh-auth-repair.sh`
+  - Force-writes final SSH auth override with `PermitRootLogin no` and `PasswordAuthentication no`
+  - Restarts SSH and prints effective auth values for troubleshooting
 - `25-hostname.sh`
   - Changes system hostname with input validation
   - Uses `hostnamectl` and records completion marker
@@ -230,9 +239,10 @@ All sectors are intended to be re-runnable. Completion markers are written under
 - `90-verify.sh`
   - Prints Tailscale status, listening ports, effective SSHD config, UFW status, unattended-upgrades status
 - `95-compliance-check.sh`
-  - Opens a compliance selector (standard, verbose walk-through, raw-state view)
-  - Uses modular checks under `sectors/compliance/checks.sh`
-  - Enforces pass/fail hardening checks and exits non-zero on failures
+  - Runs compliance checks sequentially from `compliance/lib/checks.sh`
+  - Stops on each failed check and prompts for `Repair`, `Ignore`, or `Abort`
+  - Executes mapped repair strategies from `compliance/repairs/`
+  - Exits non-zero if any issue is ignored or unresolved
 
 ## Security Invariants
 
@@ -257,7 +267,7 @@ This kit should not be modified to:
 
 ## Testing
 
-This repository includes a lightweight test harness under `tests/`:
+This repository includes a lightweight test harness under `tests/` and `compliance/tests/`:
 
 - `tests/tester` - runs syntax checks, optional `shellcheck`, and unit tests
 - Menu option `14` runs `tests/tester` directly from the installed kit
@@ -269,11 +279,15 @@ This repository includes a lightweight test harness under `tests/`:
 - `tests/unit/test_update_sector.sh` - validates updater sector behavior and wiring
 - `tests/unit/test_ping_sector.sh` - validates ping policy sector behavior and wiring
 - `tests/unit/test_selector_password_bootstrap.sh` - validates first-run admin password bootstrap behavior
+- `tests/unit/test_pubkey_help.sh` - validates SSH public key helper guidance
+- `tests/unit/test_versioning.sh` - validates VERSION usage/display
+- `tests/unit/test_ssh_auth_repair_sector.sh` - validates SSH auth repair sector behavior
+- `compliance/tests/test_check_repair_mapping.sh` - validates one-to-one check/repair mapping for compliance
 
 Run tests on a Linux host:
 
 ```bash
-chmod +x tests/tester tests/unit/*.sh tests/lib/assert.sh
+chmod +x tests/tester tests/unit/*.sh tests/lib/assert.sh compliance/tests/*.sh
 ./tests/tester
 ```
 

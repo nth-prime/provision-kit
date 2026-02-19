@@ -24,7 +24,14 @@ if [[ ! -f "$CONFIG_DIR/provision.conf" ]]; then
 fi
 
 ln -sf "$INSTALL_DIR/provision" /usr/local/bin/provision-kit
-chmod +x "$INSTALL_DIR/provision" "$INSTALL_DIR"/sectors/*.sh /usr/local/bin/provision-kit
+chmod +x \
+  "$INSTALL_DIR/provision" \
+  "$INSTALL_DIR"/sectors/*.sh \
+  "$INSTALL_DIR"/compliance/repairs/*.sh \
+  "$INSTALL_DIR"/tests/tester \
+  "$INSTALL_DIR"/tests/unit/*.sh \
+  "$INSTALL_DIR"/compliance/tests/*.sh \
+  /usr/local/bin/provision-kit
 
 echo "Install complete."
 echo "Run: provision-kit"

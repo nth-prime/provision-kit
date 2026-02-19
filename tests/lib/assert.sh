@@ -16,6 +16,18 @@ assert_file_exists() {
   [[ -f "$file" ]] || fail "$msg (missing: $file)"
 }
 
+assert_dir_exists() {
+  local dir="$1"
+  local msg="$2"
+  [[ -d "$dir" ]] || fail "$msg (missing: $dir)"
+}
+
+assert_not_empty() {
+  local value="$1"
+  local msg="$2"
+  [[ -n "$value" ]] || fail "$msg"
+}
+
 assert_contains() {
   local file="$1"
   local pattern="$2"

@@ -11,6 +11,9 @@ run_shell_syntax_checks() {
     bash -n "$ROOT_DIR/provision"
     bash -n "$ROOT_DIR/lib/lib.sh"
     bash -n "$ROOT_DIR/sectors/"*.sh
+    bash -n "$ROOT_DIR/compliance/lib/"*.sh
+    bash -n "$ROOT_DIR/compliance/repairs/"*.sh
+    bash -n "$ROOT_DIR/compliance/tests/"*.sh
     bash -n "$ROOT_DIR/tests/lib/assert.sh"
     bash -n "$UNIT_DIR/"*.sh
     echo "PASS: Shell syntax checks"
@@ -26,6 +29,9 @@ run_shellcheck_if_available() {
       "$ROOT_DIR/provision" \
       "$ROOT_DIR/lib/lib.sh" \
       "$ROOT_DIR/sectors/"*.sh \
+      "$ROOT_DIR/compliance/lib/"*.sh \
+      "$ROOT_DIR/compliance/repairs/"*.sh \
+      "$ROOT_DIR/compliance/tests/"*.sh \
       "$ROOT_DIR/tests/lib/assert.sh" \
       "$UNIT_DIR/"*.sh
     echo "PASS: shellcheck"
@@ -51,9 +57,27 @@ run_unit_tests() {
   echo "PASS: All unit tests"
 }
 
+run_compliance_tests() {
+  echo "Running compliance tests..."
+  local failed=0
+  local test_file
+  for test_file in "$ROOT_DIR/compliance/tests/"*.sh; do
+    echo "-> $(basename "$test_file")"
+    if ! bash "$test_file"; then
+      failed=1
+    fi
+  done
+  if (( failed != 0 )); then
+    echo "One or more compliance tests failed."
+    exit 1
+  fi
+  echo "PASS: Compliance tests"
+}
+
 run_shell_syntax_checks
 run_shellcheck_if_available
 run_unit_tests
+run_compliance_tests
 
 echo "All checks completed."
 

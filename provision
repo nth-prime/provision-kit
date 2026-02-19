@@ -276,6 +276,7 @@ while true; do
   echo "16) Restart Machine Now"
   echo "17) Update Provision Kit from GitHub"
   echo "18) Toggle Ping Policy"
+  echo "19) Repair SSH Auth Override"
   echo "q) Quit"
   echo "------------------------------------"
   read -rp "Select: " opt
@@ -299,6 +300,7 @@ while true; do
     16) restart_now ;;
     17) run_sector "$SECTOR_DIR/05-update-kit.sh" ;;
     18) run_sector "$SECTOR_DIR/30-ping-policy.sh" ;;
+    19) run_sector "$SECTOR_DIR/16-ssh-auth-repair.sh" ;;
     q|Q) exit 0 ;;
     *) echo "Invalid selection." ;;
   esac

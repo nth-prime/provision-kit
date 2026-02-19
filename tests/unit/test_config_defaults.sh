@@ -13,6 +13,9 @@ assert_contains "$CONFIG_EXAMPLE" '^ENFORCE_TAILSCALE_ACCESS=1$' "Tailscale enfo
 assert_contains "$CONFIG_EXAMPLE" '^SSH_ALLOW_PUBLIC_WHITELIST=1$' "Whitelist toggle default must exist"
 assert_contains "$CONFIG_EXAMPLE" '^UFW_FORCE_RESET=0$' "UFW reset must default to off"
 assert_contains "$CONFIG_EXAMPLE" '^ADMIN_SUDO_PASSWORD=""$' "Admin sudo password should default empty for first-run prompt"
+assert_contains "$CONFIG_EXAMPLE" '^PROVISION_KIT_REPO_URL="https://github\.com/nth-prime/provision-kit"$' "Default update repo URL must exist"
+assert_contains "$CONFIG_EXAMPLE" '^PROVISION_KIT_BRANCH="main"$' "Default update branch must exist"
+assert_contains "$CONFIG_EXAMPLE" '^ALLOW_PING=0$' "Ping policy must default to disabled"
 
 pass "Config defaults"
 
