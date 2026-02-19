@@ -43,14 +43,20 @@ handle_failure() {
   local action confirm
 
   while true; do
-    read -rp "Action for [$check_id] [R]epair/[I]gnore/[A]bort: " action
+    if ! read -rp "Action for [$check_id] [R]epair/[I]gnore/[A]bort: " action; then
+      echo "Input stream closed. Aborting compliance."
+      return 1
+    fi
     if [[ -z "$action" ]]; then
       echo "No default action. Enter R, I, or A."
       continue
     fi
     case "${action^^}" in
       R)
-        read -rp "Run mapped repair strategy now? (y/N): " confirm
+        if ! read -rp "Run mapped repair strategy now? (y/N): " confirm; then
+          echo "Input stream closed. Aborting compliance."
+          return 1
+        fi
         if [[ ! "$confirm" =~ ^[yY]$ ]]; then
           echo "Repair canceled."
           continue

@@ -22,6 +22,7 @@ assert_contains "$COMPLIANCE_ENGINE" 'Action for \[' "Compliance engine must pro
 assert_contains "$COMPLIANCE_ENGINE" '\[R\]epair/\[I\]gnore/\[A\]bort' "Compliance engine must offer repair or ignore choices"
 assert_contains "$COMPLIANCE_ENGINE" 'Compliance completed with ignored issues\.' "Compliance engine must fail when issues are ignored"
 assert_contains "$COMPLIANCE_ENGINE" 'Compliance aborted by user' "Compliance engine must support user abort path"
+assert_contains "$COMPLIANCE_ENGINE" 'Input stream closed\. Aborting compliance\.' "Compliance engine must abort cleanly on non-interactive input closure"
 assert_contains "$COMPLIANCE_CHECKS" 'list_compliance_checks' "Compliance checks module must register checks"
 assert_contains "$COMPLIANCE_CHECKS" 'repair-config-var.sh' "Compliance checks must map to repair strategies"
 assert_contains "$COMPLIANCE_CHECKS" 'repair-ssh-auth.sh' "Compliance checks must include SSH auth repair"
