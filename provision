@@ -109,6 +109,31 @@ print_effective_config() {
   fi
 }
 
+run_unit_tests() {
+  local tester="$BASE_DIR/tests/tester"
+  if [[ ! -f "$tester" ]]; then
+    echo "Tester not found: $tester"
+    return 1
+  fi
+  if ! command -v bash >/dev/null 2>&1; then
+    echo "bash is required to run tests."
+    return 1
+  fi
+
+  bash "$tester"
+}
+
+restart_now() {
+  read -rp "Restart this machine immediately? (y/n): " yn
+  [[ "$yn" =~ ^[yY]$ ]] || return 0
+
+  if [[ $(id -u) -ne 0 ]]; then
+    sudo systemctl reboot
+  else
+    systemctl reboot
+  fi
+}
+
 pick_editor() {
   if [[ -n "${EDITOR:-}" ]]; then
     echo "$EDITOR"
@@ -169,7 +194,12 @@ while true; do
   echo "9) Backup SSH/UFW/Provision Config"
   echo "10) Reset Completion Markers"
   echo "11) Print Effective Config"
-  echo "12) Rotate User SSH Key"
+  echo "12) Change Server Hostname"
+  echo "13) Rotate User SSH Key"
+  echo "14) Run Unit Tests"
+  echo "15) Enforce Compliance Check"
+  echo "16) Restart Machine Now"
+  echo "17) Update Provision Kit from GitHub"
   echo "q) Quit"
   echo "------------------------------------"
   read -rp "Select: " opt
@@ -186,7 +216,12 @@ while true; do
     9) backup_runtime_config ;;
     10) reset_markers ;;
     11) print_effective_config ;;
-    12) run_sector "$SECTOR_DIR/11-ssh-key-rotate.sh" ;;
+    12) run_sector "$SECTOR_DIR/25-hostname.sh" ;;
+    13) run_sector "$SECTOR_DIR/11-ssh-key-rotate.sh" ;;
+    14) run_unit_tests ;;
+    15) run_sector "$SECTOR_DIR/95-compliance-check.sh" ;;
+    16) restart_now ;;
+    17) run_sector "$SECTOR_DIR/05-update-kit.sh" ;;
     q|Q) exit 0 ;;
     *) echo "Invalid selection." ;;
   esac

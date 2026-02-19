@@ -21,11 +21,14 @@ provision-kit/
   lib/lib.sh                    # shared utilities
   sectors/
     00-tailscale.sh
+    05-update-kit.sh
     10-user-ssh.sh
     11-ssh-key-rotate.sh
     15-ssh-access.sh
     20-baseline-os.sh
+    25-hostname.sh
     90-verify.sh
+    95-compliance-check.sh
   config/
     provision.conf.example
 ```
@@ -89,6 +92,8 @@ Key settings:
 - `SSH_WHITELIST_IPV6` (space-separated CIDRs)
 - `DEFAULT_USER_NAME` (for warning checks)
 - `UFW_FORCE_RESET` (`1` to clear all existing UFW rules before applying kit rules, default `0`)
+- `PROVISION_KIT_REPO_URL` (GitHub repo URL for in-app updates)
+- `PROVISION_KIT_BRANCH` (branch used by in-app updates)
 
 Example:
 
@@ -100,6 +105,8 @@ SSH_WHITELIST_IPV4="203.0.113.10/32 198.51.100.42/32"
 SSH_WHITELIST_IPV6="2001:db8::1/128"
 DEFAULT_USER_NAME="ubuntu"
 UFW_FORCE_RESET=0
+PROVISION_KIT_REPO_URL="https://github.com/nth-prime/provision-kit"
+PROVISION_KIT_BRANCH="main"
 ```
 
 ## Usage
@@ -123,7 +130,12 @@ Menu options:
 9. Backup SSH/UFW/Provision Config
 10. Reset Completion Markers
 11. Print Effective Config
-12. Rotate User SSH Key
+12. Change Server Hostname
+13. Rotate User SSH Key
+14. Run Unit Tests
+15. Enforce Compliance Check
+16. Restart Machine Now
+17. Update Provision Kit from GitHub
 
 Recommended sector order:
 
@@ -144,6 +156,9 @@ All sectors are intended to be re-runnable. Completion markers are written under
 - `00-tailscale.sh`
   - Installs Tailscale if absent
   - Prompts for auth key if not already connected
+- `05-update-kit.sh`
+  - Downloads configured repo/branch tarball from GitHub
+  - Re-runs installer from extracted source to update `/opt/provision-kit`
 - `10-user-ssh.sh`
   - Creates admin user if missing
   - Adds user to `sudo` group
@@ -160,12 +175,18 @@ All sectors are intended to be re-runnable. Completion markers are written under
   - Backs up current `authorized_keys` before changes
   - Supports replacing all keys, removing one key, and adding a replacement key
   - Validates key format and enforces secure file ownership/permissions
+- `25-hostname.sh`
+  - Changes system hostname with input validation
+  - Uses `hostnamectl` and records completion marker
 - `20-baseline-os.sh`
   - Updates/upgrades packages
   - Enables unattended upgrades
   - Enables time sync service
 - `90-verify.sh`
   - Prints Tailscale status, listening ports, effective SSHD config, UFW status, unattended-upgrades status
+- `95-compliance-check.sh`
+  - Enforces pass/fail hardening checks against config and live system state
+  - Exits non-zero on compliance failures
 
 ## Security Invariants
 
@@ -193,9 +214,13 @@ This kit should not be modified to:
 This repository includes a lightweight test harness under `tests/`:
 
 - `tests/tester` - runs syntax checks, optional `shellcheck`, and unit tests
+- Menu option `14` runs `tests/tester` directly from the installed kit
 - `tests/unit/test_security_invariants.sh` - validates core security invariants
 - `tests/unit/test_selector_menu.sh` - validates selector menu coverage and wiring
 - `tests/unit/test_config_defaults.sh` - validates expected default config values
+- `tests/unit/test_hostname_sector.sh` - validates hostname sector behavior and safeguards
+- `tests/unit/test_compliance_sector.sh` - validates compliance sector wiring and guardrails
+- `tests/unit/test_update_sector.sh` - validates updater sector behavior and wiring
 
 Run tests on a Linux host:
 
@@ -210,7 +235,6 @@ Optional dependency:
 
 ## Publishing Checklist
 
-- Replace placeholder GitHub URLs in this README
 - Add a `LICENSE`
 - Add CI shell linting (recommended: `shellcheck` + `bash -n`)
 - Test end-to-end on a disposable VM before tagging a release
