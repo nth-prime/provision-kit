@@ -18,7 +18,7 @@ assert_file_exists "$SSH_REPAIR" "SSH auth repair sector must exist"
 
 assert_contains "$SSH_ACCESS" 'PermitRootLogin no' "Root SSH login must remain disabled"
 assert_contains "$SSH_ACCESS" 'PasswordAuthentication no' "SSH password auth must remain disabled"
-assert_contains "$SSH_ACCESS" '99-provision-auth.conf' "SSH sector must apply final auth override drop-in"
+assert_contains "$SSH_ACCESS" '01-provision-auth.conf' "SSH sector must apply early auth override drop-in"
 assert_contains "$SSH_ACCESS" 'Port \$SSH_PORT' "SSHD must use configured SSH port"
 assert_contains "$SSH_ACCESS" 'ENFORCE_TAILSCALE_ACCESS' "Tailscale enforcement gate must exist"
 assert_contains "$SSH_ACCESS" 'ufw allow in on tailscale0' "SSH must be allowed on tailscale interface"

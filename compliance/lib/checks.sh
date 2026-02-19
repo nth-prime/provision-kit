@@ -146,7 +146,7 @@ check_ufw_default_deny_incoming() {
 
 check_ufw_tailscale_ssh_rule() {
   capture_compliance_state
-  if echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp([[:space:]]+\(v6\))?[[:space:]]+on[[:space:]]+tailscale0[[:space:]]+ALLOW( IN)?[[:space:]]+Anywhere( \(v6\))?$" >/dev/null; then
+  if echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp([[:space:]]+\(v6\))?[[:space:]]+on[[:space:]]+tailscale0[[:space:]]+ALLOW( IN)?[[:space:]]+Anywhere( \(v6\))?[[:space:]]*$" >/dev/null; then
     set_compliance_detail "Expected tailscale0 SSH allow rule on port ${SSH_PORT}; observed rule present."
     return 0
   fi
@@ -165,13 +165,13 @@ check_ufw_whitelist_rules() {
   local cidr host
   for cidr in ${SSH_WHITELIST_IPV4:-}; do
     host="$(normalize_host_cidr "$cidr")"
-    if ! echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp[[:space:]]+ALLOW( IN)?[[:space:]]+(${cidr}|${host})$" >/dev/null; then
+      if ! echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp[[:space:]]+ALLOW( IN)?[[:space:]]+(${cidr}|${host})[[:space:]]*$" >/dev/null; then
       missing+=("$cidr")
     fi
   done
   for cidr in ${SSH_WHITELIST_IPV6:-}; do
     host="$(normalize_host_cidr "$cidr")"
-    if ! echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp[[:space:]]+ALLOW( IN)?[[:space:]]+(${cidr}|${host})$" >/dev/null; then
+      if ! echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp[[:space:]]+ALLOW( IN)?[[:space:]]+(${cidr}|${host})[[:space:]]*$" >/dev/null; then
       missing+=("$cidr")
     fi
   done

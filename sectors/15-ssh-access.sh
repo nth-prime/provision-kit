@@ -26,7 +26,8 @@ if ! command -v sshd >/dev/null 2>&1; then
 fi
 
 SSHD_DROPIN="/etc/ssh/sshd_config.d/95-provision.conf"
-SSHD_AUTH_OVERRIDE="/etc/ssh/sshd_config.d/99-provision-auth.conf"
+SSHD_AUTH_OVERRIDE_EARLY="/etc/ssh/sshd_config.d/01-provision-auth.conf"
+SSHD_AUTH_OVERRIDE_LEGACY="/etc/ssh/sshd_config.d/99-provision-auth.conf"
 mkdir -p /etc/ssh/sshd_config.d
 
 cat > "$SSHD_DROPIN" <<EOF
@@ -41,11 +42,12 @@ MaxAuthTries 3
 MaxSessions 2
 EOF
 
-# Final auth override to ensure late-loaded config cannot re-enable password SSH/root login.
-cat > "$SSHD_AUTH_OVERRIDE" <<EOF
+# OpenSSH uses first-value-wins for many directives. Write auth policy early.
+cat > "$SSHD_AUTH_OVERRIDE_EARLY" <<EOF
 PermitRootLogin no
 PasswordAuthentication no
 EOF
+rm -f "$SSHD_AUTH_OVERRIDE_LEGACY"
 
 sshd -t
 systemctl restart ssh || systemctl restart sshd

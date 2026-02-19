@@ -5,7 +5,8 @@ require_root
 require_config
 source "$CONFIG"
 
-SSHD_AUTH_OVERRIDE="/etc/ssh/sshd_config.d/99-provision-auth.conf"
+SSHD_AUTH_OVERRIDE_EARLY="/etc/ssh/sshd_config.d/01-provision-auth.conf"
+SSHD_AUTH_OVERRIDE_LEGACY="/etc/ssh/sshd_config.d/99-provision-auth.conf"
 mkdir -p /etc/ssh/sshd_config.d
 
 restart_ssh_daemon() {
@@ -37,12 +38,13 @@ restart_ssh_daemon() {
 
 echo "Repairing SSH auth override..."
 
-cat > "$SSHD_AUTH_OVERRIDE" <<EOF
+cat > "$SSHD_AUTH_OVERRIDE_EARLY" <<EOF
 PermitRootLogin no
 PasswordAuthentication no
 EOF
+rm -f "$SSHD_AUTH_OVERRIDE_LEGACY"
 
-echo "Auth override written: $SSHD_AUTH_OVERRIDE"
+echo "Auth override written: $SSHD_AUTH_OVERRIDE_EARLY"
 echo "Current PasswordAuthentication declarations:"
 grep -Rni '^[[:space:]]*PasswordAuthentication' /etc/ssh/sshd_config /etc/ssh/sshd_config.d/*.conf 2>/dev/null || true
 

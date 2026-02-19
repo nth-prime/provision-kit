@@ -213,7 +213,7 @@ All sectors are intended to be re-runnable. Completion markers are written under
   - Warns if default cloud user exists
 - `15-ssh-access.sh`
   - Writes `/etc/ssh/sshd_config.d/95-provision.conf`
-  - Writes final auth override `/etc/ssh/sshd_config.d/99-provision-auth.conf`
+  - Writes early auth override `/etc/ssh/sshd_config.d/01-provision-auth.conf`
   - Sets SSH daemon `Port` from `SSH_PORT`
   - Disables root/password SSH auth and limits forwarding/session knobs
   - Applies `ufw` deny-by-default inbound policy
@@ -224,7 +224,7 @@ All sectors are intended to be re-runnable. Completion markers are written under
   - Supports replacing all keys, removing one key, and adding a replacement key
   - Validates key format and enforces secure file ownership/permissions
 - `16-ssh-auth-repair.sh`
-  - Force-writes final SSH auth override with `PermitRootLogin no` and `PasswordAuthentication no`
+  - Force-writes early SSH auth override with `PermitRootLogin no` and `PasswordAuthentication no`
   - Restarts SSH and prints effective auth values for troubleshooting
 - `25-hostname.sh`
   - Changes system hostname with input validation
