@@ -40,19 +40,21 @@ handle_failure() {
   local check_fn="$3"
   local repair_script="$4"
   local repair_args="${5:-}"
-  local action confirm
+  local action normalized confirm
 
   while true; do
     if ! read -rp "Action for [$check_id] [R]epair/[I]gnore/[A]bort: " action; then
       echo "Input stream closed. Aborting compliance."
       return 1
     fi
+    action="$(echo "$action" | xargs)"
     if [[ -z "$action" ]]; then
       echo "No default action. Enter R, I, or A."
       continue
     fi
-    case "${action^^}" in
-      R)
+    normalized="${action^^}"
+    case "$normalized" in
+      R|REPAIR)
         if ! read -rp "Run mapped repair strategy now? (y/N): " confirm; then
           echo "Input stream closed. Aborting compliance."
           return 1
@@ -75,12 +77,12 @@ handle_failure() {
           echo "Repair execution failed."
         fi
         ;;
-      I)
+      I|IGNORE)
         echo "IGNORED: $description"
         COMPLIANCE_IGNORED=$((COMPLIANCE_IGNORED + 1))
         return 0
         ;;
-      A)
+      A|ABORT|Q|QUIT)
         echo "Compliance aborted by user on check [$check_id]."
         return 1
         ;;
