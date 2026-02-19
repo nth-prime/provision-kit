@@ -207,6 +207,7 @@ All sectors are intended to be re-runnable. Completion markers are written under
   - Warns if default cloud user exists
 - `15-ssh-access.sh`
   - Writes `/etc/ssh/sshd_config.d/95-provision.conf`
+  - Writes final auth override `/etc/ssh/sshd_config.d/99-provision-auth.conf`
   - Sets SSH daemon `Port` from `SSH_PORT`
   - Disables root/password SSH auth and limits forwarding/session knobs
   - Applies `ufw` deny-by-default inbound policy

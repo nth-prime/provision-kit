@@ -26,6 +26,7 @@ if ! command -v sshd >/dev/null 2>&1; then
 fi
 
 SSHD_DROPIN="/etc/ssh/sshd_config.d/95-provision.conf"
+SSHD_AUTH_OVERRIDE="/etc/ssh/sshd_config.d/99-provision-auth.conf"
 mkdir -p /etc/ssh/sshd_config.d
 
 cat > "$SSHD_DROPIN" <<EOF
@@ -38,6 +39,12 @@ AllowTcpForwarding no
 AllowAgentForwarding no
 MaxAuthTries 3
 MaxSessions 2
+EOF
+
+# Final auth override to ensure late-loaded config cannot re-enable password SSH/root login.
+cat > "$SSHD_AUTH_OVERRIDE" <<EOF
+PermitRootLogin no
+PasswordAuthentication no
 EOF
 
 sshd -t

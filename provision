@@ -16,9 +16,15 @@ run_sector() {
   fi
 
   if [[ $(id -u) -ne 0 ]]; then
-    sudo "$script"
+    if ! sudo "$script"; then
+      echo "Sector failed: $script"
+      return 1
+    fi
   else
-    "$script"
+    if ! "$script"; then
+      echo "Sector failed: $script"
+      return 1
+    fi
   fi
 }
 
