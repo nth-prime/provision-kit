@@ -40,13 +40,21 @@ handle_failure() {
   local check_fn="$3"
   local repair_script="$4"
   local repair_args="${5:-}"
-  local action
+  local action confirm
 
   while true; do
-    read -rp "Action for [$check_id] [R]epair/[I]gnore/[A]bort (default: R): " action
-    action="${action:-R}"
+    read -rp "Action for [$check_id] [R]epair/[I]gnore/[A]bort: " action
+    if [[ -z "$action" ]]; then
+      echo "No default action. Enter R, I, or A."
+      continue
+    fi
     case "${action^^}" in
       R)
+        read -rp "Run mapped repair strategy now? (y/N): " confirm
+        if [[ ! "$confirm" =~ ^[yY]$ ]]; then
+          echo "Repair canceled."
+          continue
+        fi
         if run_repair "$repair_script" "$repair_args"; then
           if "$check_fn"; then
             echo "PASS (after repair): $description"
