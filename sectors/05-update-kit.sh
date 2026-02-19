@@ -32,7 +32,7 @@ if [[ -z "$SRC_DIR" || ! -f "$SRC_DIR/install.sh" ]]; then
   exit 1
 fi
 
-bash "$SRC_DIR/install.sh"
+(cd "$SRC_DIR" && bash "./install.sh")
 if [[ -f /opt/provision-kit/VERSION ]]; then
   UPDATED_VERSION="$(tr -d '[:space:]' < /opt/provision-kit/VERSION)"
   echo "Provision Kit update complete. Installed version: $UPDATED_VERSION"

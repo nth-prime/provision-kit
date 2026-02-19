@@ -3,6 +3,7 @@ set -euo pipefail
 
 INSTALL_DIR="/opt/provision-kit"
 CONFIG_DIR="/etc/provision-kit"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [[ $(id -u) -ne 0 ]]; then
   echo "Run with sudo."
@@ -15,7 +16,7 @@ mkdir -p "$INSTALL_DIR"
 mkdir -p "$CONFIG_DIR"
 
 # Copy repository contents except VCS metadata.
-find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec cp -a {} "$INSTALL_DIR/" \;
+find "$SCRIPT_DIR" -mindepth 1 -maxdepth 1 ! -name '.git' -exec cp -a {} "$INSTALL_DIR/" \;
 
 if [[ ! -f "$CONFIG_DIR/provision.conf" ]]; then
   install -m 600 "$INSTALL_DIR/config/provision.conf.example" "$CONFIG_DIR/provision.conf"
