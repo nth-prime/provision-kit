@@ -13,9 +13,17 @@ SSH_WHITELIST_IPV6=""
 
 DEFAULT_USER_NAME="ubuntu"
 
+# Local sudo password applied to provisioned admin users.
+# Keep SSH key-only access; this password is for local privilege elevation.
+# Leave empty on first install; selector will prompt and set it before actions proceed.
+ADMIN_SUDO_PASSWORD=""
+
 # Set to 1 only if you explicitly want to clear all existing UFW rules first.
 UFW_FORCE_RESET=0
 
 # Update source for menu option "Update Provision Kit from GitHub"
 PROVISION_KIT_REPO_URL="https://github.com/nth-prime/provision-kit"
 PROVISION_KIT_BRANCH="main"
+
+# Ping policy default (1=allow ICMP echo replies, 0=disable)
+ALLOW_PING=0

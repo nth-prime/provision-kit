@@ -12,6 +12,7 @@ assert_contains "$CONFIG_EXAMPLE" '^SSH_PORT=22$' "Default SSH port must be set"
 assert_contains "$CONFIG_EXAMPLE" '^ENFORCE_TAILSCALE_ACCESS=1$' "Tailscale enforcement must default to enabled"
 assert_contains "$CONFIG_EXAMPLE" '^SSH_ALLOW_PUBLIC_WHITELIST=1$' "Whitelist toggle default must exist"
 assert_contains "$CONFIG_EXAMPLE" '^UFW_FORCE_RESET=0$' "UFW reset must default to off"
+assert_contains "$CONFIG_EXAMPLE" '^ADMIN_SUDO_PASSWORD=""$' "Admin sudo password should default empty for first-run prompt"
 
 pass "Config defaults"
 

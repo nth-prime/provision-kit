@@ -25,6 +25,7 @@ assert_contains "$SELECTOR" 'echo "14\) Run Unit Tests"' "Menu option 14 must ex
 assert_contains "$SELECTOR" 'echo "15\) Enforce Compliance Check"' "Menu option 15 must exist"
 assert_contains "$SELECTOR" 'echo "16\) Restart Machine Now"' "Menu option 16 must exist"
 assert_contains "$SELECTOR" 'echo "17\) Update Provision Kit from GitHub"' "Menu option 17 must exist"
+assert_contains "$SELECTOR" 'echo "18\) Toggle Ping Policy"' "Menu option 18 must exist"
 
 assert_contains "$SELECTOR" '12\) run_sector "\$SECTOR_DIR/25-hostname.sh" ;;' "Menu option 12 must be wired"
 assert_contains "$SELECTOR" '13\) run_sector "\$SECTOR_DIR/11-ssh-key-rotate.sh" ;;' "Menu option 13 must be wired"
@@ -32,6 +33,7 @@ assert_contains "$SELECTOR" '14\) run_unit_tests ;;' "Menu option 14 must be wir
 assert_contains "$SELECTOR" '15\) run_sector "\$SECTOR_DIR/95-compliance-check.sh" ;;' "Menu option 15 must be wired"
 assert_contains "$SELECTOR" '16\) restart_now ;;' "Menu option 16 must be wired"
 assert_contains "$SELECTOR" '17\) run_sector "\$SECTOR_DIR/05-update-kit.sh" ;;' "Menu option 17 must be wired"
+assert_contains "$SELECTOR" '18\) run_sector "\$SECTOR_DIR/30-ping-policy.sh" ;;' "Menu option 18 must be wired"
 
 pass "Selector menu options"
 

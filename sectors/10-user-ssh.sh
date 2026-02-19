@@ -16,6 +16,13 @@ if ! id "$USER" >/dev/null 2>&1; then
 fi
 usermod -aG sudo "$USER"
 
+if [[ -z "${ADMIN_SUDO_PASSWORD:-}" ]]; then
+  echo "ADMIN_SUDO_PASSWORD is not set in $CONFIG"
+  exit 1
+fi
+echo "$USER:$ADMIN_SUDO_PASSWORD" | chpasswd
+echo "Set local sudo password for $USER from config policy."
+
 read -rp "Paste public SSH key: " PUBKEY
 if [[ ! "$PUBKEY" =~ ^ssh-(rsa|ed25519|ecdsa) ]]; then
   echo "Key format does not look like an OpenSSH public key."

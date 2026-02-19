@@ -21,6 +21,64 @@ run_sector() {
   fi
 }
 
+prompt_and_set_admin_password() {
+  local pw1 pw2
+  while true; do
+    read -rsp "Set ADMIN_SUDO_PASSWORD (min 10 chars; letters, numbers, and @#%+=:.,_- only): " pw1
+    echo
+    if [[ ${#pw1} -lt 10 || ! "$pw1" =~ ^[A-Za-z0-9@#%+=:.,_-]+$ ]]; then
+      echo "Invalid password format."
+      continue
+    fi
+    read -rsp "Confirm ADMIN_SUDO_PASSWORD: " pw2
+    echo
+    if [[ "$pw1" != "$pw2" ]]; then
+      echo "Passwords did not match."
+      continue
+    fi
+    break
+  done
+
+  if [[ $(id -u) -ne 0 ]]; then
+    if ! sudo test -f "$CONFIG_FILE"; then
+      echo "Cannot update $CONFIG_FILE without sudo access."
+      return 1
+    fi
+    if sudo grep -q '^ADMIN_SUDO_PASSWORD=' "$CONFIG_FILE"; then
+      sudo sed -i "s|^ADMIN_SUDO_PASSWORD=.*$|ADMIN_SUDO_PASSWORD=\"$pw1\"|" "$CONFIG_FILE"
+    else
+      echo "ADMIN_SUDO_PASSWORD=\"$pw1\"" | sudo tee -a "$CONFIG_FILE" >/dev/null
+    fi
+  else
+    if grep -q '^ADMIN_SUDO_PASSWORD=' "$CONFIG_FILE"; then
+      sed -i "s|^ADMIN_SUDO_PASSWORD=.*$|ADMIN_SUDO_PASSWORD=\"$pw1\"|" "$CONFIG_FILE"
+    else
+      echo "ADMIN_SUDO_PASSWORD=\"$pw1\"" >> "$CONFIG_FILE"
+    fi
+  fi
+
+  echo "ADMIN_SUDO_PASSWORD has been set in config."
+}
+
+ensure_admin_password_configured() {
+  if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "Config not found: $CONFIG_FILE"
+    return 1
+  fi
+
+  local current_pw
+  if [[ $(id -u) -ne 0 ]]; then
+    current_pw="$(sudo awk -F= '/^ADMIN_SUDO_PASSWORD=/{print $2}' "$CONFIG_FILE" 2>/dev/null | tail -n1 | tr -d '\"')"
+  else
+    current_pw="$(awk -F= '/^ADMIN_SUDO_PASSWORD=/{print $2}' "$CONFIG_FILE" | tail -n1 | tr -d '\"')"
+  fi
+
+  if [[ -z "$current_pw" ]]; then
+    echo "ADMIN_SUDO_PASSWORD is not set."
+    prompt_and_set_admin_password || return 1
+  fi
+}
+
 run_recommended_sequence() {
   run_sector "$SECTOR_DIR/00-tailscale.sh"
   run_sector "$SECTOR_DIR/10-user-ssh.sh"
@@ -179,6 +237,7 @@ edit_config() {
 }
 
 while true; do
+  ensure_admin_password_configured || exit 1
   clear || true
   echo "===================================="
   echo " Provision Kit"
@@ -200,6 +259,7 @@ while true; do
   echo "15) Enforce Compliance Check"
   echo "16) Restart Machine Now"
   echo "17) Update Provision Kit from GitHub"
+  echo "18) Toggle Ping Policy"
   echo "q) Quit"
   echo "------------------------------------"
   read -rp "Select: " opt
@@ -222,6 +282,7 @@ while true; do
     15) run_sector "$SECTOR_DIR/95-compliance-check.sh" ;;
     16) restart_now ;;
     17) run_sector "$SECTOR_DIR/05-update-kit.sh" ;;
+    18) run_sector "$SECTOR_DIR/30-ping-policy.sh" ;;
     q|Q) exit 0 ;;
     *) echo "Invalid selection." ;;
   esac

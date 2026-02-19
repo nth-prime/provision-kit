@@ -27,6 +27,7 @@ provision-kit/
     15-ssh-access.sh
     20-baseline-os.sh
     25-hostname.sh
+    30-ping-policy.sh
     90-verify.sh
     95-compliance-check.sh
   config/
@@ -91,9 +92,11 @@ Key settings:
 - `SSH_WHITELIST_IPV4` (space-separated CIDRs)
 - `SSH_WHITELIST_IPV6` (space-separated CIDRs)
 - `DEFAULT_USER_NAME` (for warning checks)
+- `ADMIN_SUDO_PASSWORD` (local sudo password policy for provisioned admin users)
 - `UFW_FORCE_RESET` (`1` to clear all existing UFW rules before applying kit rules, default `0`)
 - `PROVISION_KIT_REPO_URL` (GitHub repo URL for in-app updates)
 - `PROVISION_KIT_BRANCH` (branch used by in-app updates)
+- `ALLOW_PING` (`1` allow ICMP echo replies, `0` disable; default `0`)
 
 Example:
 
@@ -104,10 +107,14 @@ SSH_ALLOW_PUBLIC_WHITELIST=1
 SSH_WHITELIST_IPV4="203.0.113.10/32 198.51.100.42/32"
 SSH_WHITELIST_IPV6="2001:db8::1/128"
 DEFAULT_USER_NAME="ubuntu"
+ADMIN_SUDO_PASSWORD=""
 UFW_FORCE_RESET=0
 PROVISION_KIT_REPO_URL="https://github.com/nth-prime/provision-kit"
 PROVISION_KIT_BRANCH="main"
+ALLOW_PING=0
 ```
+
+On first run, if `ADMIN_SUDO_PASSWORD` is empty, `provision-kit` will prompt you to set it and write it to `/etc/provision-kit/provision.conf` before allowing menu actions. Format: minimum 10 characters using letters, numbers, and `@#%+=:.,_-`.
 
 ## Usage
 
@@ -136,6 +143,7 @@ Menu options:
 15. Enforce Compliance Check
 16. Restart Machine Now
 17. Update Provision Kit from GitHub
+18. Toggle Ping Policy
 
 Recommended sector order:
 
@@ -162,6 +170,7 @@ All sectors are intended to be re-runnable. Completion markers are written under
 - `10-user-ssh.sh`
   - Creates admin user if missing
   - Adds user to `sudo` group
+  - Sets local sudo password from `ADMIN_SUDO_PASSWORD`
   - Adds provided public key idempotently to `authorized_keys`
   - Warns if default cloud user exists
 - `15-ssh-access.sh`
@@ -178,6 +187,9 @@ All sectors are intended to be re-runnable. Completion markers are written under
 - `25-hostname.sh`
   - Changes system hostname with input validation
   - Uses `hostnamectl` and records completion marker
+- `30-ping-policy.sh`
+  - Enables/disables ICMP echo replies
+  - Persists setting via `/etc/sysctl.d/99-provision-ping.conf`
 - `20-baseline-os.sh`
   - Updates/upgrades packages
   - Enables unattended upgrades
@@ -221,6 +233,8 @@ This repository includes a lightweight test harness under `tests/`:
 - `tests/unit/test_hostname_sector.sh` - validates hostname sector behavior and safeguards
 - `tests/unit/test_compliance_sector.sh` - validates compliance sector wiring and guardrails
 - `tests/unit/test_update_sector.sh` - validates updater sector behavior and wiring
+- `tests/unit/test_ping_sector.sh` - validates ping policy sector behavior and wiring
+- `tests/unit/test_selector_password_bootstrap.sh` - validates first-run admin password bootstrap behavior
 
 Run tests on a Linux host:
 
