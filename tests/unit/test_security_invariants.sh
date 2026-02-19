@@ -22,4 +22,3 @@ assert_not_contains "$USER_SSH" 'NOPASSWD:ALL' "User sector must not grant NOPAS
 assert_not_contains "$ROTATE_SSH" 'ssh-keygen -t' "Rotate sector must not generate private keys"
 
 pass "Security invariants"
-

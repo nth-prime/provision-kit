@@ -6,6 +6,7 @@ SECTOR_DIR="$BASE_DIR/sectors"
 CONFIG_FILE="/etc/provision-kit/provision.conf"
 MARKER_DIR="/var/lib/provision-kit"
 BACKUP_DIR="/var/backups/provision-kit"
+VERSION_FILE="$BASE_DIR/VERSION"
 
 run_sector() {
   local script="$1"
@@ -18,6 +19,14 @@ run_sector() {
     sudo "$script"
   else
     "$script"
+  fi
+}
+
+current_version() {
+  if [[ -f "$VERSION_FILE" ]]; then
+    tr -d '[:space:]' < "$VERSION_FILE"
+  else
+    echo "unknown"
   fi
 }
 
@@ -239,8 +248,9 @@ edit_config() {
 while true; do
   ensure_admin_password_configured || exit 1
   clear || true
+  VERSION="$(current_version)"
   echo "===================================="
-  echo " Provision Kit"
+  echo " Provision Kit v$VERSION"
   echo "===================================="
   echo "1) Edit Config"
   echo "2) Run Recommended Sequence (optional)"

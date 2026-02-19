@@ -74,6 +74,18 @@ After install:
 provision-kit
 ```
 
+## Versioning
+
+- The installed version is stored in `/opt/provision-kit/VERSION`.
+- The selector header shows the running version as `Provision Kit vX.Y.Z`.
+- The update sector (`17`) reports the installed version after update.
+
+Check version manually:
+
+```bash
+cat /opt/provision-kit/VERSION
+```
+
 ## SSH Key Quickstart
 
 Generate your key on your local machine (not on the server), then paste the public key line when prompted.
