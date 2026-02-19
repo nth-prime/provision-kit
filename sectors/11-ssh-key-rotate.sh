@@ -7,10 +7,10 @@ print_pubkey_help() {
   echo
   echo "Public SSH key help:"
   echo "  Linux/macOS:"
-  echo "    ssh-keygen -t ed25519 -C \"your-label\""
+  echo "    ssh-keygen -C \"your-label\""
   echo "    cat ~/.ssh/id_ed25519.pub"
   echo "  Windows PowerShell:"
-  echo "    ssh-keygen -t ed25519 -C \"your-label\""
+  echo "    ssh-keygen -C \"your-label\""
   echo "    Get-Content \$env:USERPROFILE\\.ssh\\id_ed25519.pub"
   echo "Paste the full line that starts with: ssh-ed25519 (or ssh-rsa/ssh-ecdsa)."
   echo

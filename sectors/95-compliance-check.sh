@@ -104,7 +104,7 @@ fi
 debug "ufw tailscale candidates:"
 echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp.*tailscale0" || true
 
-if echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp([[:space:]]+\(v6\))?[[:space:]]+on[[:space:]]+tailscale0[[:space:]]+ALLOW IN[[:space:]]+Anywhere( \(v6\))?$" >/dev/null; then
+if echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp([[:space:]]+\(v6\))?[[:space:]]+on[[:space:]]+tailscale0[[:space:]]+ALLOW( IN)?[[:space:]]+Anywhere( \(v6\))?$" >/dev/null; then
   pass "UFW allows SSH on tailscale0"
 else
   fail "UFW rule for SSH on tailscale0 missing"
@@ -115,7 +115,7 @@ if [[ "${SSH_ALLOW_PUBLIC_WHITELIST:-0}" == "1" ]]; then
   for cidr in ${SSH_WHITELIST_IPV4:-}; do
     host="$(normalize_host_cidr "$cidr")"
     debug "checking IPv4 whitelist rule for: $cidr (host form: $host)"
-    if echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp[[:space:]]+ALLOW IN[[:space:]]+(${cidr}|${host})$" >/dev/null; then
+    if echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp[[:space:]]+ALLOW( IN)?[[:space:]]+(${cidr}|${host})$" >/dev/null; then
       pass "Whitelist IPv4 rule present: $cidr"
     else
       fail "Whitelist IPv4 rule missing: $cidr"
@@ -125,7 +125,7 @@ if [[ "${SSH_ALLOW_PUBLIC_WHITELIST:-0}" == "1" ]]; then
   for cidr in ${SSH_WHITELIST_IPV6:-}; do
     host="$(normalize_host_cidr "$cidr")"
     debug "checking IPv6 whitelist rule for: $cidr (host form: $host)"
-    if echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp[[:space:]]+ALLOW IN[[:space:]]+(${cidr}|${host})$" >/dev/null; then
+    if echo "$UFW_STATUS" | grep -Ei "^[[:space:]]*${SSH_PORT}/tcp[[:space:]]+ALLOW( IN)?[[:space:]]+(${cidr}|${host})$" >/dev/null; then
       pass "Whitelist IPv6 rule present: $cidr"
     else
       fail "Whitelist IPv6 rule missing: $cidr"
