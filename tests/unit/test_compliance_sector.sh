@@ -30,5 +30,7 @@ assert_contains "$COMPLIANCE_CHECKS" 'list_compliance_checks' "Compliance checks
 assert_contains "$COMPLIANCE_CHECKS" 'repair-config-var.sh' "Compliance checks must map to repair strategies"
 assert_contains "$COMPLIANCE_CHECKS" 'repair-ssh-auth.sh' "Compliance checks must include SSH auth repair"
 assert_contains "$COMPLIANCE_CHECKS" 'repair-unattended-upgrades.sh' "Compliance checks must include unattended-upgrades repair"
+assert_contains "$COMPLIANCE_CHECKS" 'ALLOW_CLOUD_INIT_ROOT_NOPASSWD' "Compliance checks must support optional sudoers strictness toggle"
+assert_contains "$COMPLIANCE_CHECKS" 'repair-sudoers-nopasswd.sh' "Compliance checks must include sudoers NOPASSWD repair"
 
 pass "Compliance sector"

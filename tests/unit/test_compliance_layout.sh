@@ -16,6 +16,7 @@ assert_file_exists "$ROOT_DIR/compliance/repairs/repair-sshd-runtime.sh" "Compli
 assert_file_exists "$ROOT_DIR/compliance/repairs/repair-ssh-auth.sh" "Compliance repair strategy for SSH auth must exist"
 assert_file_exists "$ROOT_DIR/compliance/repairs/repair-ssh-access-policy.sh" "Compliance repair strategy for SSH access policy must exist"
 assert_file_exists "$ROOT_DIR/compliance/repairs/repair-unattended-upgrades.sh" "Compliance repair strategy for unattended upgrades must exist"
+assert_file_exists "$ROOT_DIR/compliance/repairs/repair-sudoers-nopasswd.sh" "Compliance repair strategy for sudoers NOPASSWD policy must exist"
 assert_file_exists "$ROOT_DIR/compliance/tests/test_check_repair_mapping.sh" "Compliance mapping test must exist"
 
 pass "Compliance layout"

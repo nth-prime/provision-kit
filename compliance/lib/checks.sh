@@ -70,6 +70,15 @@ check_cfg_whitelist_ipv6_present() {
   return 1
 }
 
+check_cfg_allow_cloud_init_root_nopasswd_present() {
+  if [[ -n "${ALLOW_CLOUD_INIT_ROOT_NOPASSWD:-}" ]]; then
+    set_compliance_detail "Observed ALLOW_CLOUD_INIT_ROOT_NOPASSWD='${ALLOW_CLOUD_INIT_ROOT_NOPASSWD}'."
+    return 0
+  fi
+  set_compliance_detail "ALLOW_CLOUD_INIT_ROOT_NOPASSWD is unset; defaulting to permissive mode (1)."
+  return 0
+}
+
 check_enforce_tailscale_enabled() {
   if [[ "${ENFORCE_TAILSCALE_ACCESS:-0}" == "1" ]]; then
     set_compliance_detail "Expected ENFORCE_TAILSCALE_ACCESS=1, observed ${ENFORCE_TAILSCALE_ACCESS}."
@@ -197,6 +206,26 @@ check_unattended_upgrades_enabled_active() {
   return 1
 }
 
+check_sudoers_nopasswd_policy() {
+  local mode
+  mode="${ALLOW_CLOUD_INIT_ROOT_NOPASSWD:-1}"
+
+  if [[ "$mode" == "1" ]]; then
+    set_compliance_detail "ALLOW_CLOUD_INIT_ROOT_NOPASSWD=1; skipping strict NOPASSWD sudoers enforcement."
+    return 0
+  fi
+
+  local findings
+  findings="$(grep -RniE '^[[:space:]]*[^#].*NOPASSWD' /etc/sudoers /etc/sudoers.d 2>/dev/null || true)"
+  if [[ -z "$findings" ]]; then
+    set_compliance_detail "Strict mode enabled; no active NOPASSWD sudoers entries found."
+    return 0
+  fi
+
+  set_compliance_detail "Strict mode enabled; found NOPASSWD sudoers entries: $(echo "$findings" | tr '\n' ';')."
+  return 1
+}
+
 list_compliance_checks() {
   cat <<EOF
 cfg_ssh_port_present|Config variable SSH_PORT present|check_cfg_ssh_port_present|$COMPLIANCE_REPAIRS_DIR/repair-config-var.sh|SSH_PORT 22
@@ -204,6 +233,7 @@ cfg_enforce_tailscale_present|Config variable ENFORCE_TAILSCALE_ACCESS present|c
 cfg_allow_public_whitelist_present|Config variable SSH_ALLOW_PUBLIC_WHITELIST present|check_cfg_allow_public_whitelist_present|$COMPLIANCE_REPAIRS_DIR/repair-config-var.sh|SSH_ALLOW_PUBLIC_WHITELIST 1
 cfg_whitelist_ipv4_present|Config variable SSH_WHITELIST_IPV4 present|check_cfg_whitelist_ipv4_present|$COMPLIANCE_REPAIRS_DIR/repair-config-var.sh|SSH_WHITELIST_IPV4 __EMPTY__
 cfg_whitelist_ipv6_present|Config variable SSH_WHITELIST_IPV6 present|check_cfg_whitelist_ipv6_present|$COMPLIANCE_REPAIRS_DIR/repair-config-var.sh|SSH_WHITELIST_IPV6 __EMPTY__
+cfg_allow_cloud_init_root_nopasswd_present|Config variable ALLOW_CLOUD_INIT_ROOT_NOPASSWD present (optional)|check_cfg_allow_cloud_init_root_nopasswd_present|$COMPLIANCE_REPAIRS_DIR/repair-config-var.sh|ALLOW_CLOUD_INIT_ROOT_NOPASSWD 1
 tailscale_enforced|ENFORCE_TAILSCALE_ACCESS is enabled|check_enforce_tailscale_enabled|$COMPLIANCE_REPAIRS_DIR/repair-config-var.sh|ENFORCE_TAILSCALE_ACCESS 1
 ssh_port_valid|SSH_PORT is valid|check_ssh_port_valid|$COMPLIANCE_REPAIRS_DIR/repair-config-var.sh|SSH_PORT 22
 sshd_t_executes|sshd -T executes successfully|check_sshd_t_executes|$COMPLIANCE_REPAIRS_DIR/repair-sshd-runtime.sh|
@@ -214,5 +244,6 @@ ufw_default_deny|UFW default deny incoming|check_ufw_default_deny_incoming|$COMP
 ufw_tailscale_ssh|UFW allows SSH on tailscale0|check_ufw_tailscale_ssh_rule|$COMPLIANCE_REPAIRS_DIR/repair-ssh-access-policy.sh|
 ufw_whitelist_rules|UFW whitelist rules align with config|check_ufw_whitelist_rules|$COMPLIANCE_REPAIRS_DIR/repair-ssh-access-policy.sh|
 unattended_upgrades|Unattended upgrades enabled and active|check_unattended_upgrades_enabled_active|$COMPLIANCE_REPAIRS_DIR/repair-unattended-upgrades.sh|
+sudoers_nopasswd_policy|Sudoers NOPASSWD policy compliant|check_sudoers_nopasswd_policy|$COMPLIANCE_REPAIRS_DIR/repair-sudoers-nopasswd.sh|
 EOF
 }

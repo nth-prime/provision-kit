@@ -27,3 +27,8 @@ PROVISION_KIT_BRANCH="main"
 
 # Ping policy default (1=allow ICMP echo replies, 0=disable)
 ALLOW_PING=0
+
+# Sudo policy strictness:
+# 1 = allow cloud-init style root NOPASSWD entries (default permissive behavior)
+# 0 = fail compliance when any NOPASSWD sudoers entries are present
+ALLOW_CLOUD_INIT_ROOT_NOPASSWD=1

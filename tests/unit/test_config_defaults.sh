@@ -16,6 +16,7 @@ assert_contains "$CONFIG_EXAMPLE" '^ADMIN_SUDO_PASSWORD=""$' "Admin sudo passwor
 assert_contains "$CONFIG_EXAMPLE" '^PROVISION_KIT_REPO_URL="https://github\.com/nth-prime/provision-kit"$' "Default update repo URL must exist"
 assert_contains "$CONFIG_EXAMPLE" '^PROVISION_KIT_BRANCH="main"$' "Default update branch must exist"
 assert_contains "$CONFIG_EXAMPLE" '^ALLOW_PING=0$' "Ping policy must default to disabled"
+assert_contains "$CONFIG_EXAMPLE" '^ALLOW_CLOUD_INIT_ROOT_NOPASSWD=1$' "Sudoers strict mode must default permissive"
 
 pass "Config defaults"
 

@@ -34,6 +34,7 @@ provision-kit/
     25-hostname.sh
     30-ping-policy.sh
     90-verify.sh
+    91-guided-posture-audit.sh
     95-compliance-check.sh
   config/
     provision.conf.example
@@ -134,6 +135,7 @@ Key settings:
 - `PROVISION_KIT_REPO_URL` (GitHub repo URL for in-app updates)
 - `PROVISION_KIT_BRANCH` (branch used by in-app updates)
 - `ALLOW_PING` (`1` allow ICMP echo replies, `0` disable; default `0`)
+- `ALLOW_CLOUD_INIT_ROOT_NOPASSWD` (`1` permissive default, `0` enforce strict no-`NOPASSWD` sudoers compliance)
 
 Example:
 
@@ -149,6 +151,7 @@ UFW_FORCE_RESET=0
 PROVISION_KIT_REPO_URL="https://github.com/nth-prime/provision-kit"
 PROVISION_KIT_BRANCH="main"
 ALLOW_PING=0
+ALLOW_CLOUD_INIT_ROOT_NOPASSWD=1
 ```
 
 On first run, if `ADMIN_SUDO_PASSWORD` is empty, `provision-kit` will prompt you to set it and write it to `/etc/provision-kit/provision.conf` before allowing menu actions. Format: minimum 6 characters.
@@ -182,6 +185,7 @@ Menu options:
 17. Update Provision Kit from GitHub
 18. Toggle Ping Policy
 19. Repair SSH Auth Override
+20. Guided Posture Audit (Manual)
 
 Recommended sector order:
 
@@ -238,10 +242,15 @@ All sectors are intended to be re-runnable. Completion markers are written under
   - Enables time sync service
 - `90-verify.sh`
   - Prints Tailscale status, listening ports, effective SSHD config, UFW status, unattended-upgrades status
+- `91-guided-posture-audit.sh`
+  - Runs a guided, step-by-step manual verification walkthrough
+  - Explains each posture check before execution and prompts before each command
+  - Covers install paths, config, SSH, firewall, ping, services, tailscale/listeners, and sudo posture
 - `95-compliance-check.sh`
   - Runs compliance checks sequentially from `compliance/lib/checks.sh`
   - Stops on each failed check and prompts for `Repair`, `Ignore`, or `Abort`
   - Executes mapped repair strategies from `compliance/repairs/`
+  - Supports optional strict sudoers policy (`ALLOW_CLOUD_INIT_ROOT_NOPASSWD=0`) for environments that forbid all `NOPASSWD` entries
   - Exits non-zero if any issue is ignored or unresolved
 
 ## Security Invariants
@@ -282,6 +291,7 @@ This repository includes a lightweight test harness under `tests/` and `complian
 - `tests/unit/test_pubkey_help.sh` - validates SSH public key helper guidance
 - `tests/unit/test_versioning.sh` - validates VERSION usage/display
 - `tests/unit/test_ssh_auth_repair_sector.sh` - validates SSH auth repair sector behavior
+- `tests/unit/test_guided_posture_audit_sector.sh` - validates guided posture audit selector behavior
 - `compliance/tests/test_check_repair_mapping.sh` - validates one-to-one check/repair mapping for compliance
 
 Run tests on a Linux host:
