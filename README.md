@@ -35,6 +35,7 @@ provision-kit/
     30-ping-policy.sh
     90-verify.sh
     91-guided-posture-audit.sh
+    92-selector-guide.sh
     95-compliance-check.sh
   config/
     provision.conf.example
@@ -186,6 +187,7 @@ Menu options:
 18. Toggle Ping Policy
 19. Repair SSH Auth Override
 20. Guided Posture Audit (Manual)
+21. Selector Guide
 
 Recommended sector order:
 
@@ -246,6 +248,9 @@ All sectors are intended to be re-runnable. Completion markers are written under
   - Runs a guided, step-by-step manual verification walkthrough
   - Explains each posture check before execution and prompts before each command
   - Covers install paths, config, SSH, firewall, ping, services, tailscale/listeners, and sudo posture
+- `92-selector-guide.sh`
+  - Prints a concise explanation of every selector option
+  - Clarifies what each option does and why you would run it
 - `95-compliance-check.sh`
   - Runs compliance checks sequentially from `compliance/lib/checks.sh`
   - Stops on each failed check and prompts for `Repair`, `Ignore`, or `Abort`
@@ -292,6 +297,7 @@ This repository includes a lightweight test harness under `tests/` and `complian
 - `tests/unit/test_versioning.sh` - validates VERSION usage/display
 - `tests/unit/test_ssh_auth_repair_sector.sh` - validates SSH auth repair sector behavior
 - `tests/unit/test_guided_posture_audit_sector.sh` - validates guided posture audit selector behavior
+- `tests/unit/test_selector_guide_sector.sh` - validates selector guide output coverage
 - `compliance/tests/test_check_repair_mapping.sh` - validates one-to-one check/repair mapping for compliance
 
 Run tests on a Linux host:

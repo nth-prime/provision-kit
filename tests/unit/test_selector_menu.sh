@@ -28,6 +28,7 @@ assert_contains "$SELECTOR" 'echo "17\) Update Provision Kit from GitHub"' "Menu
 assert_contains "$SELECTOR" 'echo "18\) Toggle Ping Policy"' "Menu option 18 must exist"
 assert_contains "$SELECTOR" 'echo "19\) Repair SSH Auth Override"' "Menu option 19 must exist"
 assert_contains "$SELECTOR" 'echo "20\) Guided Posture Audit \(Manual\)"' "Menu option 20 must exist"
+assert_contains "$SELECTOR" 'echo "21\) Selector Guide"' "Menu option 21 must exist"
 
 assert_contains "$SELECTOR" '1\) edit_config ;;' "Menu option 1 must be wired"
 assert_contains "$SELECTOR" '2\) run_recommended_sequence ;;' "Menu option 2 must be wired"
@@ -49,6 +50,7 @@ assert_contains "$SELECTOR" '17\) run_sector "\$SECTOR_DIR/05-update-kit.sh" ;;'
 assert_contains "$SELECTOR" '18\) run_sector "\$SECTOR_DIR/30-ping-policy.sh" ;;' "Menu option 18 must be wired"
 assert_contains "$SELECTOR" '19\) run_sector "\$SECTOR_DIR/16-ssh-auth-repair.sh" ;;' "Menu option 19 must be wired"
 assert_contains "$SELECTOR" '20\) run_sector "\$SECTOR_DIR/91-guided-posture-audit.sh" ;;' "Menu option 20 must be wired"
+assert_contains "$SELECTOR" '21\) run_sector "\$SECTOR_DIR/92-selector-guide.sh" ;;' "Menu option 21 must be wired"
 assert_contains "$SELECTOR" 'Run another selector\? \(Y/n\): ' "Selector should default follow-up prompt to yes"
 
 pass "Selector menu options"

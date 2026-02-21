@@ -278,6 +278,7 @@ while true; do
   echo "18) Toggle Ping Policy"
   echo "19) Repair SSH Auth Override"
   echo "20) Guided Posture Audit (Manual)"
+  echo "21) Selector Guide"
   echo "q) Quit"
   echo "------------------------------------"
   read -rp "Select: " opt
@@ -303,6 +304,7 @@ while true; do
     18) run_sector "$SECTOR_DIR/30-ping-policy.sh" ;;
     19) run_sector "$SECTOR_DIR/16-ssh-auth-repair.sh" ;;
     20) run_sector "$SECTOR_DIR/91-guided-posture-audit.sh" ;;
+    21) run_sector "$SECTOR_DIR/92-selector-guide.sh" ;;
     q|Q) exit 0 ;;
     *) echo "Invalid selection." ;;
   esac
